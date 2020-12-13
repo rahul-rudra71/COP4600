@@ -1,0 +1,50 @@
+.TH Ex0
+.SH NAME
+Ex1 \- System Calls
+.SH SYNOPSIS
+The goal of this project was to add an attribute to processes called security level and make 2 system calls to get and 
+set them. Along with this we had to make a library that would allow user programs access the system calls. 
+.SH DESCRIPTION
+1. In order to add this security level attribute 2 things must be done. The first is to declare the attribute as an 
+int variable in the /include/linux/sched.h file [1].
+.br .br
+2. Since every process is forked off of process 1 we must initialize the variable in the /kernel/fork.c file because 
+that is where the do_fork function is kept [2]. 
+.br .br
+3. Now we must create our two system calls which require two steps. First we must add our system calls to the system 
+call tables in the arch/x86/entry/syscalls directory and editing both the 64 and 32 bit tables [3].
+.br .br
+4. After adding the system calls to the table we can define them in the /kernel/sys.c file [3]. This is where all the
+logic for the system calls should be computed. Methods for obtaining PID and UID were discovered by examining the 
+source code for getpid() and getuid() in the same file
+.br .br
+5. Now we can make our securitylevel directory and all the necessary files inside. First a hooks.c file was created 
+in order to hold the logic for the library and the harness functions.
+.br .br
+6. The next file created was the securitylevel header in order to define the functions and their parameters from the 
+hooks.c file.
+.br .br
+7. The last file created was the Makefile. using previously obtained knowledge from exercise 2 the Makefile was directed
+to create the hooks.o file and the library.
+.br .br
+.SH TESTING
+Testing for attributes had to be done via compiling the kernel and examining the error logs that would show up. Setting
+up the system calls also had the same testing method but the logic of the system calls was tested via a user program I
+created to determine whether the system call was successful of not.
+.SH BUGS
+[1] One of the initial bugs I enctountered was initializing the security level too early in the sched.h file, before the p
+task_struct was initialized.
+.br .br
+[2] The second bug I encountered was that using reference [3] there are instructions to define the system calls at the
+bottom of the file. Resulted in failure. Remedied by defining system calls under getpid system call.  
+.SH LINK
+https://youtu.be/idynujMJrRs
+.SH REFERENCES/CITATIONS
+[1] http://sop.upv.es/gii-dso/en/t3-procesos-en-linux/gen-t3-procesos-en-linux.html
+.br .br
+[2] https://www.tldp.org/LDP/lki/lki-2.html
+.br .br
+[3] https://www.youtube.com/watch?v=SJnyJVwQdsY
+.br .br
+.SH AUTHOR
+Rahul Rudra

@@ -1,0 +1,130 @@
+diff --git a/arch/x86/entry/syscalls/syscall_32.tbl b/arch/x86/entry/syscalls/syscall_32.tbl
+index 3cf7b533b3d1..8cd55c941ce0 100644
+--- a/arch/x86/entry/syscalls/syscall_32.tbl
++++ b/arch/x86/entry/syscalls/syscall_32.tbl
+@@ -398,3 +398,5 @@
+ 384	i386	arch_prctl		sys_arch_prctl			__ia32_compat_sys_arch_prctl
+ 385	i386	io_pgetevents		sys_io_pgetevents		__ia32_compat_sys_io_pgetevents
+ 386	i386	rseq			sys_rseq			__ia32_sys_rseq
++387	i386	get_sec_level		sys_get_sec_level		__ia32_sys_get_sec_level
++388	i386	set_sec_level		sys_set_sec_level		__ia32_sys_set_sec_level
+diff --git a/arch/x86/entry/syscalls/syscall_64.tbl b/arch/x86/entry/syscalls/syscall_64.tbl
+index f0b1709a5ffb..239514340450 100644
+--- a/arch/x86/entry/syscalls/syscall_64.tbl
++++ b/arch/x86/entry/syscalls/syscall_64.tbl
+@@ -343,7 +343,8 @@
+ 332	common	statx			__x64_sys_statx
+ 333	common	io_pgetevents		__x64_sys_io_pgetevents
+ 334	common	rseq			__x64_sys_rseq
+-
++335	common	get_sec_level		__x64_sys_get_sec_level
++336	common	set_sec_level		__x64_sys_set_sec_level
+ #
+ # x32-specific system call numbers start at 512 to avoid cache impact
+ # for native 64-bit operation. The __x32_compat_sys stubs are created
+diff --git a/include/linux/sched.h b/include/linux/sched.h
+index a6c699f5ceb4..0f1f33396da2 100644
+--- a/include/linux/sched.h
++++ b/include/linux/sched.h
+@@ -612,7 +612,7 @@ struct task_struct {
+ 	/* Per task flags (PF_*), defined further below: */
+ 	unsigned int			flags;
+ 	unsigned int			ptrace;
+-
++	int				secLevel;
+ #ifdef CONFIG_SMP
+ 	struct llist_node		wake_entry;
+ 	int				on_cpu;
+diff --git a/kernel/fork.c b/kernel/fork.c
+index c21b4e1f29f8..0a41327810a0 100644
+--- a/kernel/fork.c
++++ b/kernel/fork.c
+@@ -2125,10 +2125,11 @@ long _do_fork(unsigned long clone_flags,
+ 			trace = 0;
+ 	}
+ 
++
+ 	p = copy_process(clone_flags, stack_start, stack_size,
+ 			 child_tidptr, NULL, trace, tls, NUMA_NO_NODE);
+ 	add_latent_entropy();
+-
++	p->secLevel=0;
+ 	if (IS_ERR(p))
+ 		return PTR_ERR(p);
+ 
+diff --git a/kernel/sys.c b/kernel/sys.c
+index af8ced3857b7..5378ceece2a0 100644
+--- a/kernel/sys.c
++++ b/kernel/sys.c
+@@ -901,6 +901,71 @@ SYSCALL_DEFINE0(gettid)
+ 	return task_pid_vnr(current);
+ }
+ 
++SYSCALL_DEFINE1(get_sec_level, int, pid)
++{
++	struct task_struct *p = pid_task(find_get_pid(pid), PIDTYPE_PID);
++	if(p == NULL)
++	{
++		return -1;
++	}
++	else
++	{
++		int secLev = p->secLevel;
++		return secLev;
++	}
++}
++
++SYSCALL_DEFINE2(set_sec_level, int, pid, int, newLevel)
++{
++	int myId = task_tgid_vnr(current);
++	struct task_struct *p = pid_task(find_get_pid(pid), PIDTYPE_PID);
++	struct task_struct *m = pid_task(find_get_pid(myId), PIDTYPE_PID);
++	if(p == NULL)
++	{
++		return -1;
++	}
++	else
++	{
++		if(newLevel >= 0 && newLevel <= 2147483647)
++		{
++			if(from_kuid_munged(current_user_ns(), current_uid()) == 0)
++			{
++				p->secLevel = newLevel;
++			}
++			else
++			{
++				if(pid == myId)
++				{
++					if(newLevel < p->secLevel)
++					{
++						p->secLevel = newLevel;
++					}
++					else
++					{
++						return -1;
++					}
++				}
++				else
++				{
++					if(m->secLevel > p->secLevel && newLevel <= m->secLevel)
++					{
++						p->secLevel = newLevel;
++					}
++					else
++					{
++						return -1;
++					}
++				}
++			}
++		}
++		else
++		{
++			return -1;
++		}
++        	return p->secLevel;
++	}
++}
++
+ /*
+  * Accessing ->real_parent is not SMP-safe, it could
+  * change from under us. However, we can use a stale

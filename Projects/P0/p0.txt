@@ -1,0 +1,45 @@
+.TH Ex0
+.SH NAME
+Ex0 \- Command Line
+.SH SYNOPSIS
+The goal of this project was to add a kernel boot debug message to Reptilian. 
+.SH DESCRIPTION
+1. I started by searching for the function 'rcu_end_inkernel_boot()' using the grep command, since this function
+was mentioned in the project files.
+.br .br
+2. The output of the command indicated that the file that contained this function was main.c in the directory
+'/usr/rep/src/reptilian-kernel/init/'
+.br .br
+3. Once I navigated to this file I used nano to edit it. I was lead to believe that one of the functions, either 
+printk() or pr_info(), was the way to to print out a line because of a link I discovered provided in the references. [1]
+.br .br
+5. Using this infornmation I searched through the main.c file for examples of those functions and found an example of
+pr_info(). Assuming this was the correct syntax I replicated this command before the function stated above with my 
+message. 
+.br .br
+6. After this I saved the file and rebuilt the kernel. When going through the screen recording of the debug boot screen 
+the message appeared correctly
+.br .br
+7. For the extra credit I stumbled across a link that mentioned the file menu.lst would be the file necessary to edit
+the GRUB menu. The link will be provided below. [2]
+.br .br
+8. With this infornmation I ran the find command to locate the menu.lst file which was located in the directory 
+'/mnt/sysroot/gurb/'
+.br .br
+9. After I navigated to the directory I edited the menu.lst file with the nano command and simply added my name
+at the end of the first boot option.
+.SH TESTING
+Tested by going through the boot logs using the dmesg command mentioned in Piazza. Also by shuting down and starting 
+my VM to check for the extra credit
+.SH BUGS
+My initial attempt to edit the main.c file resulted in the VM crashing upon booting up. wasn't able to diagnose why,
+I ended up using a snapshot I created earlier to get my VM up again. 
+.SH LINK
+https://www.youtube.com/watch?v=uzpUtcKZfbk&feature=youtu.be
+.SH REFERENCES/CITATIONS
+[1] https://stackoverflow.com/questions/42243185/difference-between-printk-and-pr-info
+.br .br
+[2] https://www.howtoforge.com/working_with_the_grub_menu
+.br .br
+.SH AUTHOR
+Rahul Rudra

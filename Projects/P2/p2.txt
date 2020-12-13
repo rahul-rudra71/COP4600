@@ -1,0 +1,54 @@
+.TH P2
+.SH NAME
+P2 \- POSIX Standards & Bindings
+.SH SYNOPSIS
+The goal of this project was to create sets of code that would utilize POSIX's functions and then use those sets of code in a text and android 
+program to read, open, and print out a file.
+.SH DESCRIPTION
+1. The first step that I did to tackle this project was to create the read_file.h in which I define what my read function does. 
+.br .br
+2. In order to accomplish this the file was opened with the command open() passing in the file name. [1]
+.br .br
+3. The next step is to use fstat to determine if the file is real. If it isn't the function returns a nullpointer. If it does detect the file then
+fileStat.st_size is used to determine the length of the file and allocating enough space for the file plus a null value at the end. [2]
+.br .br
+4. The file is read with the read() function, loaded into the char *buff and then closed with the close() function. This completes the .h file.
+.br .br
+5. The read_file.cpp simply calls the function in the header file.
+.br .br
+6. The displayfile.cpp file only calls the read_file function and if a null pointer is returned it prints an error, other wise printing the file
+contents. Now integration into the app begins.
+.br .br
+7. The first step is to add and link the libraries in the CMakeLists.txt file. You can add a library simply by declaring a name and then sharing the
+file path to that file. You can link the libraries by adding the specified name in the link libraries function within the same file.[3]
+.br .br
+8. In order for your c++ files to communicate with your java code they must be handled by JNI functions. In the native-calls file the JNI function 
+is defined. In this function you simply want grab the jstring as char* and pass it throught the read_file function. If a NULL pointer is returned
+then set the buff to an error. Whether an error occurs or not the filename is then released an error or the output of the file is passed back. [4][5]
+.br .br
+9. The last step is to edit the activity file to pick up the text in the test box when the button is clicked and pass the input to the JNI 
+functions.
+.br .br
+.SH TESTING
+Testing was conducted simply by running the file displayfile.cpp and ensuring that the outputs were as expected. The gui was tested similarly by 
+building the app and deploying it onto reptilian and ensuring the outputs were as expected.
+.SH BUGS
+[1] On step 7 I encountered problems as the reference I used had the CMakeFile in the same directory as the cpp file and it took some time to realize
+I was expected to link it with a file path.
+.br .br
+[2] On step 8 I encountered many problems as the references I used seemed to have outdated versions of the JNI functions that took in more
+parameters then the functions do. This was solved because Android studios lets you know how many parameters a function expects and what they are.
+.SH LINK
+https://youtu.be/-hCadjYnGLQ
+.SH REFERENCES/CITATIONS
+[1] https://www.youtube.com/watch?v=dP3N8g7h8gY 
+.br .br
+[2] https://www.youtube.com/watch?v=FT2A2HQbTkU&t=113s
+.br .br
+[3] https://www.youtube.com/watch?v=abuCXC3t6eQ&list=PLK6MXr8gasrGmIiSuVQXpfFuE1uPT615s&index=4
+.br .br
+[4] https://www.youtube.com/watch?v=uglvahwOvIM&t=1445s
+.br .br
+[5] https://docs.oracle.com/javase/7/docs/technotes/guides/jni/spec/functions.html
+.SH AUTHOR
+Rahul Rudra

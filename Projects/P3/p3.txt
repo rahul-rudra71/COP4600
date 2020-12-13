@@ -1,0 +1,55 @@
+.TH P3
+.SH NAME
+P2 \- File System
+.SH SYNOPSIS
+The goal of this project was to create a library that could read Wad files nd create a directory and 
+file structure from it. Implement a userspace daemon (via FUSE) to access the directory structure once 
+mounted.
+.SH DESCRIPTION
+1. fuse_operations daemonize your program[5] so by implementing these operations implements the daemon.
+.br .br
+2. The daemon creates a wadFile and utilizes it by calling its public functions to retrieve data about the WAD
+file. The main function in wadfs declare which fuse functions correlate with which methods in the program. 
+.br .br
+3. The methods that are important are read[3], which stores the elements of the file into a buffer and returns the
+size of the file. readdir is important because it store all of the elements in the immediate directory and stores
+them in a buffer. getattr detects whether the path is a directory or file. the rest of the methods check whether
+the path is a file or directory, returning an error if it isn't[4].
+.br .br
+4. The Wad.h file declares the Wad class public functions to be used, a private vector, and a struct. The idea
+being that the struct holds all of the infonmation about the files and they get pushed onto the vector.
+.br .br
+5. My loadWad function picks up the header byte by byte[1] of the file, converts them to integers[2] 
+and jumps to the descriptor and loops through the file storing all the relevant infornmation about the file 
+including its contents, parent, path, size, and whether it is a directory or not.
+.br .br
+6. A string defined as directory keeps track of the current path. constantly appending and erasing the string
+depending on whether it is entering a directory or leaving. This is the main method of how I keep track of the 
+files.
+.br .br
+7. The other functions mainly loop through the vector determining whether the path exists, checking if the path 
+contains a file or directory, and returning the intended information.
+.SH TESTING
+Testing was done through my WAd.cpp file by implementing a main function that would call the other methods.
+It has been left in the code, commented out, so that you can see. Testing on the daemon was done by mounting the
+file and running standard commands "cd, ls, cat" in order to see if functionality was correct.
+.SH BUGS
+[1] Had an issue with fuse because the wad_dump file provided passed in paths for getDirectory with the 
+last backslash "/Gl/" but fuse doesn't "/Gl" so this caused many issues for me. solved by deleting last 
+character of the path unless it was the root.
+.br .br
+[2] Couldn't compare filenames properly because i wasn't deleting whitespace at the end of the string.
+.SH LINK
+https://youtu.be/obnmmnKhd-M
+.SH REFERENCES/CITATIONS
+[1] http://www.cplusplus.com/forum/beginner/21548/
+.br .br
+[2] https://stackoverflow.com/questions/34943835/convert-four-bytes-to-integer-using-c/34944089
+.br .br
+[3] https://engineering.facile.it/blog/eng/write-filesystem-fuse/
+.br .br
+[4] https://libfuse.github.io/doxygen/structfuse__operations.html
+.br .br
+[5] http://man7.org/linux/man-pages/man4/fuse.4.html
+.SH AUTHOR
+Rahul Rudra
